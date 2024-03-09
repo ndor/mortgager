@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>אופטימייזר</title>
+      <link rel="stylesheet" href="https://pyscript.net/releases/2024.2.1/core.css">
+      <script type="module" src="https://pyscript.net/releases/2024.2.1/core.js"></script>
+  </head>
+  <body>
+    <h1>ברוכים הבאים ליועץ המשכנתא האוטומטי - אופטימייזר</h1>
+    <p>מה ההכנסה החודשית ברוטו?</p>
+    <input type="text" id="english" placeholder="בשקלים..." />
+    <button py-click="translate_english">חשב מס שולי</button>
+    <div id="output"></div>
+    <script type="py" src="./main.py" config="./pyscript.json"></script>
+  </body>
+</html>
