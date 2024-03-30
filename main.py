@@ -1053,15 +1053,13 @@ def MAIN(asset_cost,
     # TODO: add interpolated ratings...
 
     if is_married_couple:
-        fixed_yearly_rate = lambda r: interp1d([0., .45, .6, .7, .75], [.028, .0285, .03, .0315, .0315], kind='cubic')(
-            r)
+        fixed_yearly_rate = lambda r: interp1d([0., .45, .6, .7, .75], [.028, .0285, .03, .0315, .0315], kind='cubic')(r)
         madad_added_yearly_rate = lambda r: interp1d([0., .45, .6, .7, .75], [.018, .019, .0205, .0225, .0225],
                                                      kind='cubic')(r)
         prime_added_yearly_rate = 0.00011 #-0.0064 * 1.1
     else:
         fixed_yearly_rate = lambda r: interp1d([0., .45, .6, .7, .75], [.03, .031, .033, .035, .035], kind='cubic')(r)
-        madad_added_yearly_rate = lambda r: interp1d([0., .45, .6, .7, .75], [.0195, .0205, .0225, .0245, .0245],
-                                                     kind='cubic')(r)
+        madad_added_yearly_rate = lambda r: interp1d([0., .45, .6, .7, .75], [.0195, .0205, .0225, .0245, .0245], kind='cubic')(r)
         prime_added_yearly_rate = 0.0001 #-0.0064
 
     # print(fixed_yearly_rate, madad_added_yearly_rate, prime_added_yearly_rate)

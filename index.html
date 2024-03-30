@@ -3,10 +3,9 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>try</title>
         <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
         <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-        <script src="js/easy-number-separator.js"></script>
+        <title>try</title>
     </head>
     <body>
         <script>
@@ -56,8 +55,7 @@
             <fieldset>
                 <legend>select amortizations</legend>
                 <details>
-                    <object data="amortization_info.txt">info</object>
-                    <p>Detailed content goes here …</p>
+                    <iframe src="amortization_info.html"></iframe>
                 </details>
                 <div aria-required="true">
                     <input type="checkbox" id="shpitzer" name="amortizations" value="shpitzer" checked onchange="checkAndSetInBounds()" />
@@ -70,8 +68,7 @@
             <fieldset>
                 <legend>select prime portion</legend>
                 <details>
-                    <object data="prime_info.txt">info</object>
-                    <p>Detailed content goes here …</p>
+                    <iframe src="prime_info.html"></iframe>
                 </details>
                 <div>
                     <input type="radio" id="33" name="prime" value="1" checked />
@@ -86,8 +83,7 @@
             <fieldset>
                 <legend>personal details</legend>
                 <details>
-                    <object data="personal_detailes_info.txt">info</object>
-                    <p>Detailed content goes here …</p>
+                    <iframe src="personal_details_info.html"></iframe>
                 </details>
                 <div>
                     <input type="checkbox" id="is_married_couple" name="is_married_couple" value="1" />
