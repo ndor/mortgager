@@ -1,53 +1,22 @@
 import copy
+import requests
 import numpy as np
 # import numpy_financial as npf
 import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.optimize import differential_evolution, brute, shgo, minimize, LinearConstraint, NonlinearConstraint
 
-
-from pyscript import document, window
+try:
+    from pyscript import document, window
+except ModuleNotFoundError:
+    pass
 
 
 '''
 http://www.yorku.ca/amarshal/mortgage.htm
+https://www.moti.org.il/intrests
 '''
 
-# קרן שווה
-# שפיצר
-# מדד המחירים לצרכן (הלשכה המרכזית לסטטיסטיקה)
-
-# מסלולים:
-# ריבית קבועה צמודה למדד (הקרן צמודה למדד, עם גידור של הבנק בדיפלציה)
-# ריבית קבועה -> קנס בפרעון מוקדם
-# (הריבית קבועה, והקרן צומדה למדד המחירים לצרכן) קבועה וצמודה
-# ריבית קבועה ל 5 שנים, ואז מתעדכנת (פרעון מוקדם ללא קנס)
-# פריים (פרעון מוקדם ללא קנס) ריבית משתנה
-
-# הגבלות:
-# לפחות 30% מהתמהיל תהיה בריבית קבועה
-# לא יותר מ 33% (ישתנה בפברואר) תהיה בריבית פריים
-
-
-''''
-שיטות החזר:
----------
-1) שפיצר
-2) קרן שווה
-3) בוליט (לפעמים נקראת "הלוואת בלון" או "הלוואת גישור") * פחות רלוונטי
-
-מסלולים:
----------
-1) פריים
-2) קבועה צמודה (ק"צ)
-3) קבועה לא צמודה (קל"צ)
-4) משתנה צמודה כל 5 שנים
-5) משתנה לא צמודה כל 5 שנים
-....
-יש עוד, אך כרגע נסתפק בזה
-'''
-
-# ratings source: https://www.moti.org.il/intrests
 SEED = 108
 CALC_INCREMENTS = 10
 dt_m = 12
@@ -62,23 +31,6 @@ ALLOWABLE_MONTHLY_FRACTION = 0.4
 BANK_BASE = {'shpitzer': {'fixed': {}, 'madad': {}, 'prime': {}}, 'equal': {'fixed': {}, 'madad': {}, 'prime': {}}}
 DURATIONS = list(range(MIN_DURATION, MAX_DURATION + dt_m * dt_y, dt_m * dt_y))  # duration in step, by years strides
 
-FIXED_ = 0.03
-MADAD_ = 0.01
-MIN_PRIME_ = -0.008
-MAX_PRIME_ = 0.005
-
-
-# PRIME_ADDED_YEARLY_RATE = lambda prime_content: -MIN_PRIME_ if prime_content <= 0.333 \
-#                             else prime_content * (MAX_PRIME_ - MIN_PRIME_) / (MAX_PRIME_CONTENT - 0.333) + MIN_PRIME_
-# PRIME_ADDED_MONTHLY_RATE = lambda prime_content: PRIME_ADDED_YEARLY_RATE(prime_content) / 12
-
-
-
-
-
-###
-###
-###
 make_float = lambda x: '{:,.2f}'.format(x)
 make_int = lambda x: '{:,}'.format(int(x))
 
@@ -423,10 +375,11 @@ def fv(rate, nper, pmt, pv, when='end'):
 ###
 
 
-def get_madad(initial_value=0.0016,
+def get_madad(initial_value=0.0045,
               initial_steady_period_months_duration=12,
               steady_ramp_months_duration=84,
-              long_range_centerline=0.002):
+              long_range_centerline=0.003):
+
     madad_0 = initial_value * np.ones(initial_steady_period_months_duration)
     madad_1 = np.polyval([(long_range_centerline - initial_value) / steady_ramp_months_duration, madad_0[-1]],
                          np.arange(steady_ramp_months_duration))
@@ -435,13 +388,17 @@ def get_madad(initial_value=0.0016,
     return madad
 
 
-def get_prime(initial_value=0.0035,
+def get_prime(initial_value=0.0045,
               initial_steady_period_months_duration=12,
               steady_ramp_months_duration=84,
               long_range_centerline=0.025,
               banks_margine=0.015,
               wavewlwngthy=10,
               amplitude=0.015):
+    try:
+        initial_value = requests.get('https://Boi.org.il/PublicApi/GetInterest').json()['currentInterest'] / 100
+    except:
+        pass
     prime_0 = initial_value * np.ones(initial_steady_period_months_duration)
     prime_1 = np.polyval([long_range_centerline / steady_ramp_months_duration, prime_0[-1]],
                          np.arange(steady_ramp_months_duration))
@@ -1228,6 +1185,37 @@ def beutify_HTML(df,
         <head>
         <style>
 
+    		body {
+    			background-color: rgb(255,255,255);
+    		}
+            h3 {
+                text-align: center;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            h6 {
+                text-align: center;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            table { 
+    			align: center;
+                margin-left: auto;
+                margin-right: auto;
+    			background-color: rgb(255,255,255);
+            }
+            table, th, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 5px;
+                text-align: center;
+                font-family: Helvetica, Arial, sans-serif;
+                font-size: 80%;
+            }
+            table tbody tr:hover {
+                background-color: #dddddd;
+            }
+
         </style>
         </head>
         <body>
@@ -1257,7 +1245,7 @@ def beutify_HTML(df,
     # footer:
     footer = f'<h6> {".אין לראות את האתר והכלים בו כהמלצה פיננסית מכל סוג, ויוצריו אינם אחראיים לצעדי המשתמשים בהקשר זה"} </h6>'
     footer += f'<h6> {":כל הזכויות של&nbsp;אופטימייזר המשכנתא&nbsp; שמורות ליוצר"} </h6>'
-    footer += f'<h6><a style="color: {background_color};" href="http://linkedin.com/in/natanel-davidovits-28695312" target="_blank" rel="noopener"> {"`נתנאל דוידוביץ"} </a></h6>\n'
+    footer += f'<h6><a style="color: {background_color};" href="http://linkedin.com/in/natanel-davidovits-28695312" target="_blank" rel="noopener"> {"נתנאל דוידוביץ"} </a></h6>\n'
     footer += '''
             </body>
             </html>
