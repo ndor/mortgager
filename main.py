@@ -1,5 +1,4 @@
 import copy
-import requests
 import numpy as np
 # import numpy_financial as npf
 import pandas as pd
@@ -7,9 +6,17 @@ from scipy.interpolate import interp1d
 from scipy.optimize import differential_evolution, brute, shgo, minimize, LinearConstraint, NonlinearConstraint
 
 try:
+    import requests
+except:
+    pass
+    # import pyodide_js
+    # await pyodide_js.loadPackage('requests')
+
+try:
     from pyscript import document, window
 except ModuleNotFoundError:
     pass
+# from pyscript import document, window
 
 
 '''
@@ -21,13 +28,13 @@ SEED = 108
 CALC_INCREMENTS = 10
 dt_m = 12
 dt_y = 5
-MAX_PRIME_CONTENT = 0.666
-MINIMAL_FIXED_CONTENT = 0.333
+MAX_PRIME_PORTON = 0.666
+MINIMAL_FIXED_PORTION = 0.333
 MAX_FUNDING_RATE_FOR_FIRST_APPARTMENT = 0.75
 MAX_FUNDING_RATE_FOR_NON_FIRST_APPARTMENT = 0.5
 MAX_DURATION = 30 * dt_m
 MIN_DURATION = 5 * dt_m
-ALLOWABLE_MONTHLY_FRACTION = 0.4
+ALLOWABLE_MONTHLY_FRACTION = 0.334
 BANK_BASE = {'shpitzer': {'fixed': {}, 'madad': {}, 'prime': {}}, 'equal': {'fixed': {}, 'madad': {}, 'prime': {}}}
 DURATIONS = list(range(MIN_DURATION, MAX_DURATION + dt_m * dt_y, dt_m * dt_y))  # duration in step, by years strides
 
@@ -375,10 +382,10 @@ def fv(rate, nper, pmt, pv, when='end'):
 ###
 
 
-def get_madad(initial_value=0.0045,
+def get_madad(initial_value=0.025,
               initial_steady_period_months_duration=12,
               steady_ramp_months_duration=84,
-              long_range_centerline=0.003):
+              long_range_centerline=0.03):
 
     madad_0 = initial_value * np.ones(initial_steady_period_months_duration)
     madad_1 = np.polyval([(long_range_centerline - initial_value) / steady_ramp_months_duration, madad_0[-1]],
@@ -388,15 +395,15 @@ def get_madad(initial_value=0.0045,
     return madad
 
 
-def get_prime(initial_value=0.0045,
+def get_prime(initial_value=0.06,
               initial_steady_period_months_duration=12,
               steady_ramp_months_duration=84,
-              long_range_centerline=0.025,
+              long_range_centerline=0.035,
               banks_margine=0.015,
               wavewlwngthy=10,
               amplitude=0.015):
     try:
-        initial_value = requests.get('https://Boi.org.il/PublicApi/GetInterest').json()['currentInterest'] / 100
+        initial_value = requests.get('https://Boi.org.il/PublicApi/GetInterest').json()['currentInterest'] / 100 + 0.015
     except:
         pass
     prime_0 = initial_value * np.ones(initial_steady_period_months_duration)
@@ -610,7 +617,7 @@ def optimize_amortization(principal,
                           bank,
                           use_max_prime=False,
                           increments=CALC_INCREMENTS,
-                          max_prime_content=MAX_PRIME_CONTENT):
+                          max_prime_content=MAX_PRIME_PORTON):
     func = lambda X: amortization_target_function(X,
                                                   amortization_type,
                                                   max_monthly_payment,
@@ -621,7 +628,7 @@ def optimize_amortization(principal,
         x3 = principal * max_prime_content
         slack = principal - x3
         min_f_val = np.inf
-        for x1 in np.linspace(MINIMAL_FIXED_CONTENT * principal, slack, increments):  # limit fixed
+        for x1 in np.linspace(MINIMAL_FIXED_PORTION * principal, slack, increments):  # limit fixed
             x2 = slack - x1
             f_val = func((x1, x2, x3))
             if np.isinf(f_val):
@@ -637,7 +644,7 @@ def optimize_amortization(principal,
                                                        for_optimization=False)
     else:
         min_f_val = np.inf
-        for x1 in np.linspace(MINIMAL_FIXED_CONTENT * principal, principal, increments):  # limit fixed
+        for x1 in np.linspace(MINIMAL_FIXED_PORTION * principal, principal, increments):  # limit fixed
             for x2 in np.linspace(0, principal - x1, increments):
                 if x1 + x2 <= principal:
                     if principal - (x1 + x2) <= max_prime_content * principal:  # limit prime
@@ -662,7 +669,7 @@ def sleek_optimize_amortization(principal,
                                 max_monthly_payment,
                                 bank,
                                 use_max_prime=False,
-                                max_prime_content=MAX_PRIME_CONTENT):
+                                max_prime_content=MAX_PRIME_PORTON):
     if use_max_prime:
         func = lambda X: amortization_target_function([X,
                                                        principal * (1 - max_prime_content) - X,
@@ -672,7 +679,7 @@ def sleek_optimize_amortization(principal,
                                                       bank,
                                                       for_optimization=True)
 
-        bounds = [(MINIMAL_FIXED_CONTENT * principal, principal * (1 - max_prime_content))]
+        bounds = [(MINIMAL_FIXED_PORTION * principal, principal * (1 - max_prime_content))]
         # constraints = [
         #     NonlinearConstraint(lambda x: x.sum(), principal, principal),
         # ]
@@ -700,7 +707,7 @@ def sleek_optimize_amortization(principal,
                                                       bank,
                                                       for_optimization=True)
 
-        bounds = [(MINIMAL_FIXED_CONTENT * principal, principal), (0., loan_principal)]
+        bounds = [(MINIMAL_FIXED_PORTION * principal, principal), (0., loan_principal)]
         constraints = [
             NonlinearConstraint(lambda x: principal - x.sum(), 0, max_prime_content * principal),
             # NonlinearConstraint(lambda x: x.sum(), principal, principal),
@@ -728,11 +735,11 @@ def optimize_mortgage(loan_principal,
                       max_monthly_payment,
                       amortizations,
                       use_max_prime=True,
-                      fixed_yearly_rate=0.03,
+                      fixed_yearly_rate=0.035,
                       madad_added_yearly_rate=0.01,
-                      prime_added_yearly_rate=-0.008,
+                      prime_added_yearly_rate=0.01,
                       increments=CALC_INCREMENTS,
-                      max_prime_content=MAX_PRIME_CONTENT):
+                      max_prime_content=MAX_PRIME_PORTON):
     fixed_monthly_rate = yearly_rate_to_monthly(fixed_yearly_rate)
     madad_monthly_rate = yearly_rate_to_monthly(MADAD + madad_added_yearly_rate)
     prime_monthly_rate = yearly_rate_to_monthly(PRIME + prime_added_yearly_rate)
@@ -816,10 +823,10 @@ def sleek_optimize_mortgage(loan_principal,
                             max_monthly_payment,
                             amortizations,
                             use_max_prime=True,
-                            fixed_yearly_rate=0.03,
+                            fixed_yearly_rate=0.035,
                             madad_added_yearly_rate=0.01,
-                            prime_added_yearly_rate=-0.008,
-                            max_prime_content=MAX_PRIME_CONTENT):
+                            prime_added_yearly_rate=0.01,
+                            max_prime_content=MAX_PRIME_PORTON):
     fixed_monthly_rate = yearly_rate_to_monthly(fixed_yearly_rate)
     madad_monthly_rate = yearly_rate_to_monthly(MADAD + madad_added_yearly_rate)
     prime_monthly_rate = yearly_rate_to_monthly(PRIME + prime_added_yearly_rate)
@@ -917,9 +924,9 @@ def sleek_optimize_mortgage(loan_principal,
 
 
 def bundle_to_df(bundle,
-                 fixed_yearly_rate=0.03,
+                 fixed_yearly_rate=0.035,
                  madad_added_yearly_rate=0.01,
-                 prime_added_yearly_rate=-0.008):
+                 prime_added_yearly_rate=0.01):
     if type(bundle) == tuple:
         bundle = bundle[0]
 
@@ -980,13 +987,13 @@ def MAIN(asset_cost,
          is_single_asset=True,
          prime=1):
     if prime == 2:
-        prime_ = MAX_PRIME_CONTENT
+        prime_ = MAX_PRIME_PORTON
         use_max_prime = True
     elif prime == 1:
-        prime_ = MAX_PRIME_CONTENT / 2
+        prime_ = MAX_PRIME_PORTON / 2
         use_max_prime = True
     else:
-        prime_ = MAX_PRIME_CONTENT
+        prime_ = MAX_PRIME_PORTON
         use_max_prime = False
 
     if (net_monthly_income * ALLOWABLE_MONTHLY_FRACTION < max_monthly_payment) or (max_monthly_payment is None):
@@ -1042,15 +1049,6 @@ def MAIN(asset_cost,
     #
     return df
 
-# def input_args_to_df(input_args):
-#     asset_cost = int(float(input_args['asset_cost']))
-#     capital = int(float(input_args['capital']))
-#     max_monthly_payment = int(float(input_args['max_monthly_payment']))
-#     net_monthly_income = int(float(input_args['net_monthly_income']))
-#     is_married_couple = bool(ast.literal_eval(input_args['is_couple']))
-#     is_single_asset = bool(ast.literal_eval(input_args['is_single_asset']))
-#     amortizations = ast.literal_eval(input_args['amortizations'])
-#     prime = int(ast.literal_eval(input_args['prime']))
 def input_args_to_df(asset_cost,
                      capital,
                      max_monthly_payment,
@@ -1082,7 +1080,7 @@ def input_args_to_df(asset_cost,
     elif prime == 1:
         prime = 'מקסימלי ישן - % 33'
     else:
-        prime = 'אופטימלי'
+        prime = 'חלוקה מיטבית אוטומטית'
 
     input_params = [
         [make_int(asset_cost) + ' ₪', 'מחיר הנכס'],
@@ -1104,7 +1102,7 @@ def stylish_html(df, title=''):
     Write an entire dataframe to an HTML file with nice formatting.
     '''
     result = ''
-    result += '<h3> %s </h3>\n' % title
+    result += '<h4> %s </h4>\n' % title
     result += df.to_html(classes='wide', escape=False, index=False)
     result += '''
     </body>
@@ -1188,7 +1186,15 @@ def beutify_HTML(df,
     		body {
     			background-color: rgb(255,255,255);
     		}
+            h2 {
+                text-align: center;
+                font-family: Helvetica, Arial, sans-serif;
+            }
             h3 {
+                text-align: center;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            h4 {
                 text-align: center;
                 font-family: Helvetica, Arial, sans-serif;
             }
@@ -1223,7 +1229,7 @@ def beutify_HTML(df,
 
     # header:
     header = style
-    header += f'<h3> {"אופטימייזר המשכנתא - תמהיל נבחר"} </h3>'
+    header += f'<h2> {"תמהיל נבחר"} </h2>'
     header += '''
             </body>
             </html>
@@ -1245,7 +1251,7 @@ def beutify_HTML(df,
     # footer:
     footer = f'<h6> {".אין לראות את האתר והכלים בו כהמלצה פיננסית מכל סוג, ויוצריו אינם אחראיים לצעדי המשתמשים בהקשר זה"} </h6>'
     footer += f'<h6> {":כל הזכויות של&nbsp;אופטימייזר המשכנתא&nbsp; שמורות ליוצר"} </h6>'
-    footer += f'<h6><a style="color: {background_color};" href="http://linkedin.com/in/natanel-davidovits-28695312" target="_blank" rel="noopener"> {"נתנאל דוידוביץ"} </a></h6>\n'
+    footer += f'<h6><a href="http://linkedin.com/in/natanel-davidovits-28695312" target="_blank" rel="noopener"> {"נתנאל דוידוביץ"} </a></h6>\n'
     footer += '''
             </body>
             </html>

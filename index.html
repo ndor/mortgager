@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="he">
+<html dir="rtl" lang="he">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-        <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+        <script type="module" src="https://pyscript.net/releases/2024.3.2/core.js"></script>
         <title>try</title>
     </head>
     <body>
@@ -48,77 +48,90 @@
                 }
             }
         </script>
-        <h1>wzup?</h1>
-        <p>not much</p>
+        <h2>יועץ משכנתא חינמי</h2>
+        <div>
+            <p>
+                הכירו את יועץ המשכנתא הדיגיטלי והחינמי שלכם,
+                באמצעות כלי מדויק ופשוט תוכלו לקבל את התמהיל האידיאלי עבורכם!<br>
+                בתמהיל שיחושב תשלמו את סך הריבית הנמוך ביותר עבור המשכנתא שלכם.<br>
+                אז קדימה, בואו נתחיל!
+            </p>
+            <p>
+                * כדאי להכיר את השיקולים המחושבים במסלול המשכנתא. בכל תחום תוכלו למצוא מידע נוסף להשלמת הידע.
+            </p>
+        </div>
         <!-- define inputs -->
         <form>
             <fieldset>
-                <legend>select amortizations</legend>
+                <legend><b>בחר לוח סילוקין</b></legend>
                 <details>
+                    <summary>מידע נוסף</summary>
                     <iframe src="amortization_info.html"></iframe>
                 </details>
                 <div aria-required="true">
                     <input type="checkbox" id="shpitzer" name="amortizations" value="shpitzer" checked onchange="checkAndSetInBounds()" />
-                    <label for="shpitzer">include shpitzer&nbsp;&nbsp;</label>
+                    <label for="shpitzer">כלול קרן שפיצר&nbsp;&nbsp;</label>
                     <input type="checkbox" id="equal" name="amortizations" value="equal" onchange="checkAndSetInBounds()" />
-                    <label for="equal">include equal</label>
+                    <label for="equal">כלול קרן שווה&nbsp;&nbsp;</label>
                 </div>
             </fieldset>
             <br>
             <fieldset>
-                <legend>select prime portion</legend>
+                <legend><b>מרכיב ריבית פריים</b></legend>
                 <details>
+                    <summary>מידע נוסף</summary>
                     <iframe src="prime_info.html"></iframe>
                 </details>
                 <div>
                     <input type="radio" id="33" name="prime" value="1" checked />
-                    <label for="33">33%&nbsp;&nbsp;</label>
+                    <label for="33">מקסימום ישן - 33%&nbsp;&nbsp;</label>
                     <input type="radio" id="66" name="prime" value="2" />
-                    <label for="66">66%&nbsp;&nbsp;</label>
+                    <label for="66">מקסימום חדש - 66%&nbsp;&nbsp;</label>
                     <input type="radio" id="opt" name="prime" value="0" />
-                    <label for="opt">optimized</label>
+                    <label for="opt">חלוקה מיטבית אוטומטית&nbsp;&nbsp;</label>
                 </div>
             </fieldset>
             <br>
             <fieldset>
-                <legend>personal details</legend>
+                <legend><b>פרטים אשיים</b></legend>
                 <details>
+                    <summary>מידע נוסף</summary>
                     <iframe src="personal_details_info.html"></iframe>
                 </details>
                 <div>
                     <input type="checkbox" id="is_married_couple" name="is_married_couple" value="1" />
-                    <label for="is_married_couple">married couple</label>
+                    <label for="is_married_couple">זוג נשוי \ מוכר בציבור&nbsp;&nbsp;</label>
                     <br>
                     <input type="checkbox" id="is_single_asset" name="is_single_asset" value="1" checked onchange="checkAndSetInBounds()" />
-                    <label for="is_single_asset">single asset</label>
+                    <label for="is_single_asset">זה יהיה הנכס היחיד&nbsp;&nbsp;</label>
                     <br>
                 </div>
                 <br>
                 <div>
-                    <label for="asset_cost">asset cost&nbsp;&nbsp;</label>
+                    <label for="asset_cost">מחיר הנכס&nbsp;&nbsp;</label>
                     <input type="number" id="asset_cost" name="asset_cost" value="100000" min="100000" max="10000000" step="1000" onchange="checkAndSetInBounds()" />
                     <br>
                     <br>
-                    <label for="capital">capital&nbsp;&nbsp;</label>
+                    <label for="capital">הון עצמי&nbsp;&nbsp;</label>
                     <input type="number" id="capital" name="capital" step="1000" value="25000" min="25000" max="10000000" onchange="checkAndSetInBounds()" />
                     <br>
                     <br>
-                    <label for="net_monthly_income">net monthly income&nbsp;&nbsp;</label>
+                    <label for="net_monthly_income">הכנסה חודשית נטו&nbsp;&nbsp;</label>
                     <input type="number" id="net_monthly_income" name="net_monthly_income" step="100" value="3000" min="3000" max="100000" onchange="checkAndSetInBounds()" />
                     <br>
                     <br>
-                    <label for="max_monthly_payment">max monthly payment&nbsp;&nbsp;</label>
+                    <label for="max_monthly_payment">תשלום חודשי מקסימלי&nbsp;&nbsp;</label>
                     <input type="number" id="max_monthly_payment" name="max_monthly_payment" step="1000" value="1000" min="1000" max="100000" onchange="checkAndSetInBounds()" />
                     <br>
                     <br>
                 </div>
             </fieldset>
             <br>
-            <input type="reset">
+            <input type="reset" value="אתחול נתונים">
         </form>
         <br>
         <!-- action -->
-        <button py-click="func" id="calculate" name="calculate">calculate</button>
+        <button py-click="func" id="calculate" name="calculate">חשב</button>
         <br>
         <br>
         <!--      <div id="output"></div>-->
