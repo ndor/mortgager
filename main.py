@@ -18,6 +18,8 @@ except ModuleNotFoundError:
     pass
 # from pyscript import document, window
 
+import warnings
+warnings.filterwarnings('ignore')
 
 '''
 http://www.yorku.ca/amarshal/mortgage.htm
