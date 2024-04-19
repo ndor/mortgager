@@ -392,27 +392,27 @@ def get_madad(initial_value=0.025,
     madad_0 = initial_value * np.ones(initial_steady_period_months_duration)
     madad_1 = np.polyval([(long_range_centerline - initial_value) / steady_ramp_months_duration, madad_0[-1]],
                          np.arange(steady_ramp_months_duration))
-    madad_3 = madad_1[-1] * np.ones(MAX_DURATION)
-    madad = np.concatenate([madad_0, madad_1, madad_3])
+    madad_2 = madad_1[-1] * np.ones(MAX_DURATION)
+    madad = np.concatenate([madad_0, madad_1, madad_2])
     return madad
 
 
-def get_prime(initial_value=0.06,
+def get_prime(initial_value=0.045,
               initial_steady_period_months_duration=12,
               steady_ramp_months_duration=84,
-              long_range_centerline=0.035,
+              long_range_centerline=0.03,
               banks_margine=0.015,
               wavewlwngthy=10,
               amplitude=0.015):
     try:
-        initial_value = requests.get('https://Boi.org.il/PublicApi/GetInterest').json()['currentInterest'] / 100 + 0.015
+        initial_value = requests.get('https://Boi.org.il/PublicApi/GetInterest').json()['currentInterest'] / 100
     except:
         pass
-    prime_0 = initial_value * np.ones(initial_steady_period_months_duration)
-    prime_1 = np.polyval([long_range_centerline / steady_ramp_months_duration, prime_0[-1]],
+    prime_0 = initial_value * np.ones(initial_steady_period_months_duration) + banks_margine
+    prime_1 = np.polyval([(long_range_centerline - prime_0[-1]) / steady_ramp_months_duration, prime_0[-1]],
                          np.arange(steady_ramp_months_duration))
     prime_2 = np.sin(2 * np.pi * np.arange(0, 30, 1 / 12) / wavewlwngthy) * amplitude + prime_1[-1]
-    prime = np.concatenate([prime_0, prime_1, prime_2]) + banks_margine
+    prime = np.concatenate([prime_0, prime_1, prime_2])
     return prime
 
 
@@ -620,7 +620,7 @@ def optimize_amortization(principal,
                           use_max_prime=False,
                           increments=CALC_INCREMENTS,
                           max_prime_content=MAX_PRIME_PORTON):
-    func = lambda X: amortization_target_function(X,
+    fun = lambda X: amortization_target_function(X,
                                                   amortization_type,
                                                   max_monthly_payment,
                                                   bank,
@@ -632,7 +632,7 @@ def optimize_amortization(principal,
         min_f_val = np.inf
         for x1 in np.linspace(MINIMAL_FIXED_PORTION * principal, slack, increments):  # limit fixed
             x2 = slack - x1
-            f_val = func((x1, x2, x3))
+            f_val = fun((x1, x2, x3))
             if np.isinf(f_val):
                 continue
             if f_val < min_f_val:
@@ -660,6 +660,7 @@ def optimize_amortization(principal,
                                                        max_monthly_payment,
                                                        bank,
                                                        for_optimization=False)
+
     if result:
         return best_bundle, min_f_val
     else:
@@ -738,8 +739,8 @@ def optimize_mortgage(loan_principal,
                       amortizations,
                       use_max_prime=True,
                       fixed_yearly_rate=0.035,
-                      madad_added_yearly_rate=0.01,
-                      prime_added_yearly_rate=0.01,
+                      madad_added_yearly_rate=0.0001,
+                      prime_added_yearly_rate=0.0001,
                       increments=CALC_INCREMENTS,
                       max_prime_content=MAX_PRIME_PORTON):
     fixed_monthly_rate = yearly_rate_to_monthly(fixed_yearly_rate)
@@ -755,6 +756,7 @@ def optimize_mortgage(loan_principal,
                                                    prime_monthly_rate,
                                                    return_dict=False,
                                                    return_lists=False)
+
     bank_singular = convert_bank_to_singular_values(bank)
     if len(amortizations) == 1:
         # Shpitzer or Equal:
@@ -764,6 +766,7 @@ def optimize_mortgage(loan_principal,
                                                        bank_singular,
                                                        use_max_prime=use_max_prime,
                                                        max_prime_content=max_prime_content)
+
         if amortizations[0] == 'shpitzer':
             best_bundle.pop('equal')
         else:
@@ -818,6 +821,7 @@ def optimize_mortgage(loan_principal,
             for k2 in best_bundle[k1].keys():
                 for k3 in best_bundle[k1][k2].keys():
                     best_bundle[k1][k2][k3]['ppmt'] *= c_tot
+
     return best_bundle, rates
 
 
@@ -826,8 +830,8 @@ def sleek_optimize_mortgage(loan_principal,
                             amortizations,
                             use_max_prime=True,
                             fixed_yearly_rate=0.035,
-                            madad_added_yearly_rate=0.01,
-                            prime_added_yearly_rate=0.01,
+                            madad_added_yearly_rate=0.0001,
+                            prime_added_yearly_rate=0.0001,
                             max_prime_content=MAX_PRIME_PORTON):
     fixed_monthly_rate = yearly_rate_to_monthly(fixed_yearly_rate)
     madad_monthly_rate = yearly_rate_to_monthly(MADAD + madad_added_yearly_rate)
@@ -868,7 +872,7 @@ def sleek_optimize_mortgage(loan_principal,
         return best_bundle
     else:
         # Shpitzer & Equal:
-        def func(X, for_opt=True):
+        def fun(X, for_opt=True):
             shpitzer_principal, shpitzer_max_monthly_payment = X
             equal_principal = loan_principal - shpitzer_principal
             equal_max_monthly_payment = max_monthly_payment - shpitzer_max_monthly_payment
@@ -912,7 +916,7 @@ def sleek_optimize_mortgage(loan_principal,
         # constraints = [
         #     NonlinearConstraint(lambda x: x.sum(), principal, principal),
         # ]
-        result = differential_evolution(func,
+        result = differential_evolution(fun,
                                         bounds,
                                         # constraints=constraints,
                                         disp=False,
@@ -922,13 +926,13 @@ def sleek_optimize_mortgage(loan_principal,
                                         popsize=9,
                                         seed=SEED,
                                         workers=1)
-        return func(result.x, for_opt=False), rates
+        return fun(result.x, for_opt=False), rates
 
 
 def bundle_to_df(bundle,
                  fixed_yearly_rate=0.035,
-                 madad_added_yearly_rate=0.01,
-                 prime_added_yearly_rate=0.01):
+                 madad_added_yearly_rate=0.0001,
+                 prime_added_yearly_rate=0.0001):
     if type(bundle) == tuple:
         bundle = bundle[0]
 
@@ -1040,6 +1044,7 @@ def MAIN(asset_cost,
                                prime_added_yearly_rate=prime_added_yearly_rate,
                                increments=CALC_INCREMENTS,
                                max_prime_content=prime_)
+
     df = bundle_to_df(bundle,
                       fixed_yearly_rate=fixed_yearly_rate(funding_rate),
                       madad_added_yearly_rate=madad_added_yearly_rate(funding_rate),
@@ -1418,14 +1423,14 @@ if __name__ == '__main__':
 
 
 
-    asset_cost = 2000000
-    capital = 1000000
-    max_monthly_payment = 6000
-    net_monthly_income = 26000
-    is_married_couple = True
+    asset_cost = 2150000
+    capital = 950000
+    max_monthly_payment = 8000
+    net_monthly_income = 20000
+    is_married_couple = False
     is_single_asset = True
     amortizations = ['shpitzer']  # , 'equal']
-    prime = 1
+    prime = 1 # 33%
 
     from time import time
     tic = time()
@@ -1438,6 +1443,9 @@ if __name__ == '__main__':
                  is_single_asset=is_single_asset,
                  prime=prime)
 
+    for c in df.columns:
+        print(df[c])
+
     html_out = beutify_HTML(df, asset_cost,
                                  capital,
                                  max_monthly_payment,
@@ -1447,8 +1455,8 @@ if __name__ == '__main__':
                                  amortizations,
                                  prime)
 
-
-    print(df)
+    # print(df)
+    # print(html_out)
     print(time() - tic)
 
 
