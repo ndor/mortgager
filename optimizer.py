@@ -681,10 +681,8 @@ def optimize(asset_cost,
                       madad_added_yearly_rate=MADAD[0] + madad_added_yearly_rate(funding_rate),
                       prime_added_yearly_rate=PRIME[0] + prime_added_yearly_rate)
 
-    # else:
-    #     raise ValueError(
-    #         f'at least one method of amortization should be considered (Shpitzer or, and Equal)')
-    #
+    df['principal'] = np.ceil(df['principal'].values).astype(int)
+    df['monthly_1st_payment'] = np.ceil(df['monthly_1st_payment'].values).astype(int)
 
     return df
 
