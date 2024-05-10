@@ -22,7 +22,7 @@ def func(event):
     is_single_asset = not (document.querySelector("[name='is_single_asset']:checked") == None)
     prime = int(document.querySelector("[name='prime']:checked").value)
 
-    df = MAIN(asset_cost,
+    df = optimize(asset_cost,
                  capital,
                  max_monthly_payment,
                  net_monthly_income,
