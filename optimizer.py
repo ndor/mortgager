@@ -137,13 +137,13 @@ def build_base_amortization_bank_dictionary(fixed_monthly_rate,
             if shpitzer:
                 bank['shpitzer'][title][duration] = get_shpitzer_amortization(monthly_rate,
                                                                               duration,
-                                                                              1.00278,
+                                                                              1, #.00278,
                                                                               return_dict=return_dict,
                                                                               return_lists=return_lists)
             if equal:
                 bank['equal'][title][duration] = get_equal_amortization(monthly_rate,
                                                                         duration,
-                                                                        1.00278,
+                                                                        1, #.00278,
                                                                         return_dict=return_dict,
                                                                         return_lists=return_lists)
     return bank
@@ -323,7 +323,7 @@ def sleek_optimize_amortization(principal,
                                         disp=False,
                                         # maxiter=10,
                                         atol=1e3,
-                                        tol=0.05,
+                                        tol=0.0001,
                                         popsize=9,
                                         seed=SEED,
                                         workers=1)
@@ -353,7 +353,7 @@ def sleek_optimize_amortization(principal,
                                         disp=False,
                                         # maxiter=10,
                                         atol=1e3,
-                                        tol=0.05,
+                                        tol=0.0001,
                                         popsize=9,
                                         seed=SEED,
                                         workers=1)
@@ -552,7 +552,7 @@ def sleek_optimize_mortgage(loan_principal,
                                         disp=False,
                                         # maxiter=10,
                                         atol=1e3,
-                                        tol=0.05,
+                                        tol=0.0001,
                                         popsize=9,
                                         seed=SEED,
                                         workers=1)
