@@ -137,13 +137,13 @@ def build_base_amortization_bank_dictionary(fixed_monthly_rate,
             if shpitzer:
                 bank['shpitzer'][title][duration] = get_shpitzer_amortization(monthly_rate,
                                                                               duration,
-                                                                              1,
+                                                                              1.00278,
                                                                               return_dict=return_dict,
                                                                               return_lists=return_lists)
             if equal:
                 bank['equal'][title][duration] = get_equal_amortization(monthly_rate,
                                                                         duration,
-                                                                        1,
+                                                                        1.00278,
                                                                         return_dict=return_dict,
                                                                         return_lists=return_lists)
     return bank
