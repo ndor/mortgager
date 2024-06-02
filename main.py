@@ -1,6 +1,5 @@
 import numpy as np
 from optimizer import optimize
-from financials import update_yearly_to_monthly_rates_with_risk
 from htmling import *
 
 try:
@@ -30,8 +29,8 @@ def func(event):
     elif 'equal' in amortizations:
         equal_amortization = True
 
-    is_married_couple = not (document.querySelector("[name='is_married_couple']:checked") == None)
-    is_single_asset = not (document.querySelector("[name='is_single_asset']:checked") == None)
+    is_married_couple = False#not (document.querySelector("[name='is_married_couple']:checked") == None)
+    is_single_asset = False#not (document.querySelector("[name='is_single_asset']:checked") == None)
 
     prime = int(document.querySelector("[name='prime']:checked").value)
     if prime == 0:
@@ -50,7 +49,6 @@ def func(event):
                                             is_married_couple=is_married_couple,
                                             equal_amortization=equal_amortization,
                                             set_prime_portion=_prime)
-    monthly_rates = update_yearly_to_monthly_rates_with_risk(funding_rate, is_married_couple)
 
     # weighted interest:
         # flattening the dict:
@@ -96,8 +94,7 @@ def func(event):
                             is_married_couple,
                             is_single_asset,
                             amortizations,
-                            prime,
-                            monthly_rates)
+                            prime)
 
     new = window.open()
     new.document.body.innerHTML = html_out

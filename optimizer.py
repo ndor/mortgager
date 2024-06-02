@@ -252,7 +252,7 @@ if __name__ == '__main__':
     optimal_result_finance = {}
     for k1, v in optimal_result.items():
         k2 = list(v.keys())[0]
-        optimal_result_finance[k1] = np.ceil(v[k2] * principal).astype('int32')
+        optimal_result_finance[k1] = np.ceil(v[k2]['pmt'] * principal).astype('int32')
         print(optimal_result_finance[k1].shape)
 
     print('-'*44)

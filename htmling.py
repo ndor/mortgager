@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from financials import update_yearly_to_monthly_rates_with_risk
 
 make_float = lambda x: '{:,.2f}'.format(x)
 make_int = lambda x: '{:,}'.format(int(x))
@@ -112,10 +112,11 @@ def beutify_HTML(total_monthly_payments,
                  is_married_couple,
                  is_single_asset,
                  amortizations,
-                 prime,
-                 rates):
+                 prime):
     principal = asset_cost - capital
     summay_df = df_to_summary_df(total_monthly_payments)
+    funding_rate = principal / asset_cost
+    monthly_rates = update_yearly_to_monthly_rates_with_risk(funding_rate, is_married_couple)
 
     d = {
         'amortization_type': [],
@@ -139,9 +140,9 @@ def beutify_HTML(total_monthly_payments,
         for a in ['prime', 'madad', 'fixed']:
             if a in k:
                 d['rate_type'].append(a)
-                for rate in rates.keys():
+                for rate in monthly_rates.keys():
                     if a in rate:
-                        d['nominal_rate'].append(make_float(12 * 100 * np.average(rates[rate])))
+                        d['nominal_rate'].append(make_float(12 * 100 * np.average(monthly_rates[rate])))
                         break
                 break
 
