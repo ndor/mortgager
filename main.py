@@ -29,8 +29,8 @@ def func(event):
     elif 'equal' in amortizations:
         equal_amortization = True
 
-    is_married_couple = False#not (document.querySelector("[name='is_married_couple']:checked") == None)
-    is_single_asset = False#not (document.querySelector("[name='is_single_asset']:checked") == None)
+    is_married_couple = not (document.querySelector("[name='is_married_couple']:checked") == None)
+    is_single_asset = not (document.querySelector("[name='is_single_asset']:checked") == None)
 
     prime = int(document.querySelector("[name='prime']:checked").value)
     if prime == 0:
