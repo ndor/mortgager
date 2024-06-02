@@ -66,23 +66,6 @@ def stylish_html(df, title=''):
     return result
 
 
-# def df_to_summary_df(df):
-#     df = pd.DataFrame(data=[[make_float(df['net_paid'].sum() / df['principal'].sum()),
-#                             make_int(df['net_paid'].sum()),
-#                             make_int(df['interest_paid'].sum()),
-#                             make_int(df['monthly_1st_payment'].sum()),
-#                             make_float(100 * (df['nominal_rate'] * df['principal_portion']).sum()),
-#                             make_int(df['duration'].max()),
-#                             make_int(df['principal'].sum())]],
-#                       columns=['עלות משוקללת ל 1₪',
-#                                'סה"כ לתשלום ₪',
-#                                'סה"כ עלות ₪',
-#                                'תשלום ראשון ₪',
-#                                'ריבית משוקללת %',
-#                                'חודשי תשלום',
-#                                'סך הקרן ₪'])
-#     return df
-
 def df_to_summary_df(total_monthly_payments):
     df = pd.DataFrame(data=[[make_float(total_monthly_payments['total']['pmt'].sum() /
                                         total_monthly_payments['total']['ppmt'].sum()),
