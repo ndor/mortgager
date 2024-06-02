@@ -56,9 +56,6 @@ def input_args_to_df(asset_cost,
 
 
 def stylish_html(df, title=''):
-    '''
-    Write an entire dataframe to an HTML file with nice formatting.
-    '''
     result = ''
     result += '<h4> %s </h4>\n' % title
     result += df.to_html(classes='wide', escape=False, index=False)
@@ -69,15 +66,35 @@ def stylish_html(df, title=''):
     return result
 
 
-def df_to_summay_df(df):
-    df = pd.DataFrame(data=[[make_float(df['net_paid'].sum() / df['principal'].sum()),
-                            make_int(df['net_paid'].sum()),
-                            make_int(df['interest_paid'].sum()),
-                            make_int(df['monthly_1st_payment'].sum()),
-                            make_float(100 * (df['nominal_rate'] * df['principal_portion']).sum()),
-                            make_int(df['duration'].max()),
-                            make_int(df['principal'].sum())]],
-                      columns=['עלות משוקללת ל 1₪',
+# def df_to_summary_df(df):
+#     df = pd.DataFrame(data=[[make_float(df['net_paid'].sum() / df['principal'].sum()),
+#                             make_int(df['net_paid'].sum()),
+#                             make_int(df['interest_paid'].sum()),
+#                             make_int(df['monthly_1st_payment'].sum()),
+#                             make_float(100 * (df['nominal_rate'] * df['principal_portion']).sum()),
+#                             make_int(df['duration'].max()),
+#                             make_int(df['principal'].sum())]],
+#                       columns=['עלות משוקללת ל 1₪',
+#                                'סה"כ לתשלום ₪',
+#                                'סה"כ עלות ₪',
+#                                'תשלום ראשון ₪',
+#                                'ריבית משוקללת %',
+#                                'חודשי תשלום',
+#                                'סך הקרן ₪'])
+#     return df
+
+def df_to_summary_df(total_monthly_payments):
+    df = pd.DataFrame(data=[[make_float(total_monthly_payments['total']['pmt'].sum() /
+                                        total_monthly_payments['total']['ppmt'].sum()),
+                            make_int(total_monthly_payments['total']['pmt'].sum()),
+                            make_int(total_monthly_payments['total']['ipmt'].sum()),
+                            make_int(total_monthly_payments['total']['pmt'][0]),
+                            make_float(100 * (total_monthly_payments['total']['pmt'].sum() /
+                                        total_monthly_payments['total']['ppmt'].sum()) /
+                                       len(total_monthly_payments['total']['pmt'])),
+                            make_int(len(total_monthly_payments['total']['pmt'])),
+                            make_int(total_monthly_payments['total']['ppmt'].sum())]],
+                      columns=['עלות משוקללת לשקל',
                                'סה"כ לתשלום ₪',
                                'סה"כ עלות ₪',
                                'תשלום ראשון ₪',
@@ -87,7 +104,7 @@ def df_to_summay_df(df):
     return df
 
 
-def beutify_HTML(df,
+def beutify_HTML(total_monthly_payments,
                  asset_cost,
                  capital,
                  max_monthly_payment,
@@ -96,20 +113,60 @@ def beutify_HTML(df,
                  is_single_asset,
                  amortizations,
                  prime,
-                 background_color='rgb(255, 255, 255)'):
-    summay_df = df_to_summay_df(df)
-    df = df.drop(['effective_overall_rate'], axis=1)
-    percent_fields = ['nominal_rate', 'principal_portion']  # , 'effective_overall_rate']#, 'returned_ratio'
-    for c in df.columns:
-        if c in percent_fields:
-            df[c] = np.around(df[c].astype(float) * 100, decimals=2)
-            df[c] = df[c].apply(make_float)
-        elif type(df[c].iloc[0]) != str:
-            if c == 'returned_ratio':
-                df[c] = np.around(df[c], decimals=2)
-                df[c] = df[c].apply(make_float)
-            else:
-                df[c] = df[c].astype('int').apply(make_int)
+                 rates):
+    principal = asset_cost - capital
+    summay_df = df_to_summary_df(total_monthly_payments)
+
+    d = {
+        'amortization_type': [],
+        'rate_type': [],
+        'nominal_rate': [],
+        'duration': [],
+        'monthly_1st_payment': [],
+        # 'monthly_max_payment': '',
+        'principal': [],
+        'principal_portion': [],
+        'interest_paid': [],
+        'net_paid': [],
+        'returned_ratio': [],
+        # 'effective_overall_rate': []
+    }
+
+    for k in total_monthly_payments.keys():
+        if 'total' in k:
+            continue
+
+        for a in ['prime', 'madad', 'fixed']:
+            if a in k:
+                d['rate_type'].append(a)
+                for rate in rates.keys():
+                    if a in rate:
+                        d['nominal_rate'].append(make_float(12 * 100 * np.average(rates[rate])))
+                        break
+                break
+
+        if len(amortizations) == 1:
+            d['amortization_type'].append(amortizations[0])
+        else:
+            for a in amortizations:
+                if a in k:
+                    d['amortization_type'].append(a)
+                    break
+
+        d['duration'].append(k.split('_')[-1])
+        d['monthly_1st_payment'].append(make_int(total_monthly_payments[k]['pmt'][0]))
+        d['principal'].append(make_int(total_monthly_payments[k]['ppmt'].sum()))
+        d['principal_portion'].append(make_float(100 * total_monthly_payments[k]['ppmt'].sum() / principal))
+        d['interest_paid'].append(make_int(total_monthly_payments[k]['ipmt'].sum()))
+        d['net_paid'].append(make_int(total_monthly_payments[k]['pmt'].sum()))
+        d['returned_ratio'].append(make_float(total_monthly_payments[k]['pmt'].sum() / total_monthly_payments[k]['ppmt'].sum()))
+
+    df = pd.DataFrame.from_dict(d)
+
+    summay_df[summay_df.columns[3]] = make_int(max_monthly_payment)
+    summay_df[summay_df.columns[-1]] = make_int(principal)
+    summay_df[summay_df.columns[-3]] = make_float(sum((df['principal_portion'].values.astype('float32') / 100) *
+                                       df['nominal_rate'].values.astype('float32')))
 
     # Hebrewfy:
     Hebs = {
@@ -126,7 +183,7 @@ def beutify_HTML(df,
         'returned_ratio': 'מחיר לשקל ₪',
         'effective_overall_rate': 'ריבית אפקטיבית %',
 
-        'shpitzer': 'שפיצר',
+        'spitzer': 'שפיצר',
         'equal': 'קרן-שווה',
 
         'fixed': 'קל"צ',
@@ -213,14 +270,15 @@ def beutify_HTML(df,
 
     # footer:
     footer = f'<h6> {".אין לראות את האתר והכלים בו כהמלצה פיננסית מכל סוג, ויוצריו אינם אחראיים לצעדי המשתמשים בהקשר זה"} </h6>'
-    footer += f'<h6> {":כל הזכויות של&nbsp;כלי חישוב המשכנתא&nbsp; שמורות ליוצר"} </h6>'
+    footer += f'<h6> {":כל הזכויות של&nbsp;כלי חישוב המשכנתא&nbsp;שמורות ליוצר"} </h6>'
     footer += f'<h6><a href="http://linkedin.com/in/natanel-davidovits-28695312" target="_blank" rel="noopener"> {"נתנאל דוידוביץ"} </a></h6>\n'
     footer += '''
             </body>
             </html>
         '''
-    df = header + df + footer
-    return df
+    page = header + df + footer
+
+    return page
 
 if __name__ == '__main__':
     ...

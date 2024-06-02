@@ -1,8 +1,9 @@
 {
     "packages": ["numpy", "scipy", "pandas", "requests"],
     "files": {
-        "numpy_financial_functions.py": "",
         "params.py": "",
+        "numpy_financial_functions.py": "",
+        "financials.py": "",
         "htmling.py": "",
         "optimizer.py": ""
     }
