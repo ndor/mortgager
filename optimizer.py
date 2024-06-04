@@ -1,6 +1,5 @@
 import copy
 import numpy as np
-from scipy.interpolate import interp1d
 from scipy.optimize import differential_evolution, NonlinearConstraint
 
 try:

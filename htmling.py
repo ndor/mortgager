@@ -77,7 +77,7 @@ def df_to_summary_df(total_monthly_payments):
                                        len(total_monthly_payments['total']['pmt'])),
                             make_int(len(total_monthly_payments['total']['pmt'])),
                             make_int(total_monthly_payments['total']['ppmt'].sum())]],
-                      columns=['עלות משוקללת לשקל',
+                      columns=['מחיר משוקלל לשקל',
                                'סה"כ לתשלום ₪',
                                'סה"כ עלות ₪',
                                'תשלום ראשון ₪',

@@ -15,6 +15,7 @@ warnings.filterwarnings('ignore')
 from pprint import PrettyPrinter
 pp = PrettyPrinter().pprint
 
+
 def func(event):
     asset_cost = int(document.querySelector("#asset_cost").value)
     capital = int(document.querySelector("#capital").value)
