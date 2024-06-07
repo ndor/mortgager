@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def monthly_payment_bank(monthly_rate: np.ndarray, equal_amortization=False):
+def monthly_payment_bank(monthly_rate: np.ndarray, equal_amortization=False) -> dict:
     if equal_amortization:
         amortization_function = get_equal_amortization
     else:
@@ -39,8 +39,8 @@ def get_optimized_composition(monthly_rates_dictionary: dict,
     # principal_portions = {'fixed': 0.6, 'madad': 0.6, 'prime': 0.6}
     if not all(list(map(lambda x: (type(x) is float) or (type(x) is np.float_), list(principal_portions.values())))):
         raise ValueError('>>> type(values) != float')
-    if sum(principal_portions.values()) != 1:
-        raise ValueError('>>> sum(values) != 1')
+    if sum(principal_portions.values()) < 0.99999999:
+        raise ValueError(f'>>> sum(values) != 1 ::: {sum(principal_portions.values())}')
     payments_bank = tri_amortization_composition_duration_variable(monthly_rates_dictionary,
                                                                    equal_amortization=equal_amortization)
     # presumming, for later efficiency:
@@ -83,7 +83,7 @@ def get_optimized_principal_portions(monthly_rates_dictionary: dict,
                                      equal_amortization=False,
                                      set_prime_portion=None) -> (dict, float):
     if set_prime_portion is None:
-        def target_function(portions_array): # (fixed_portion, madad_portion, prime_portion)
+        def target_function(portions_array) -> float: # (fixed_portion, madad_portion, prime_portion)
             try:
                 _, net_payments = get_optimized_composition(monthly_rates_dictionary,
                                                             {'fixed': portions_array[0],
@@ -95,14 +95,17 @@ def get_optimized_principal_portions(monthly_rates_dictionary: dict,
                 return np.pi # >3 x 1 (principal)
             return net_payments
 
-        bounds = [(MIN_FIXED_PORTION, 1),
+        bounds = [(MIN_FIXED_PORTION, 1 - MIN_UNFIXED_PORTON),
                   (MIN_UNFIXED_PORTON, MAX_UNFIXED_PORTON),
                   (MIN_UNFIXED_PORTON, MAX_UNFIXED_PORTON)]
         constraints = (NonlinearConstraint(lambda x: x.sum(), 1, 1))
-        result = differential_evolution(target_function, bounds, constraints=constraints, disp=False,seed=SEED)
+        result = differential_evolution(target_function, bounds, constraints=constraints, disp=False, maxiter=30, seed=SEED)
+        # if result.x[0] < MIN_UNFIXED_PORTON: # less than 5%
+        #     result.x[0] = 0
+        #     result.x = result.x / result.x[1:].sum()
         optimal_principal_portions = {'fixed': result.x[0], 'madad': result.x[1], 'prime': result.x[2]}
     else:
-        def target_function(portions_array):  # (fixed_portion, madad_portion)
+        def target_function(portions_array) -> float:  # (fixed_portion, madad_portion)
             try:
                 _, net_payments = get_optimized_composition(monthly_rates_dictionary,
                                                             {'fixed': portions_array[0],
@@ -114,10 +117,14 @@ def get_optimized_principal_portions(monthly_rates_dictionary: dict,
                 return np.pi # >3 x 1 (principal)
             return net_payments
 
-        bounds = [(MIN_FIXED_PORTION, 1),
-                  (MIN_UNFIXED_PORTON, MAX_UNFIXED_PORTON - set_prime_portion)]
+        bounds = [(MIN_FIXED_PORTION, 1 - set_prime_portion),
+                  (MIN_UNFIXED_PORTON, 1 - set_prime_portion)]
         constraints = (NonlinearConstraint(lambda x: x.sum(), 1 - set_prime_portion, 1 - set_prime_portion))
-        result = differential_evolution(target_function, bounds, constraints=constraints, disp=False, seed=SEED)
+        result = differential_evolution(target_function, bounds, constraints=constraints, disp=False, maxiter=30, seed=SEED)
+        # if result.x[0] < MIN_UNFIXED_PORTON: # less than 5%
+        #     optimal_principal_portions = {'fixed': 0, 'madad': result.x.sum(), 'prime': set_prime_portion}
+        # else:
+        #     optimal_principal_portions = {'fixed': result.x[0], 'madad': result.x[1], 'prime': set_prime_portion}
         optimal_principal_portions = {'fixed': result.x[0], 'madad': result.x[1], 'prime': set_prime_portion}
 
     return get_optimized_composition(monthly_rates_dictionary,
@@ -145,11 +152,11 @@ def get_optimized_principal_portions_with_amortization_defined(monthly_rates_dic
                                                                                    equal_amortization=False,
                                                                                    set_prime_portion=set_prime_portion)
 
-    def target_function(equal_portion):
+    def target_function(equal_portion) -> float:
         return equal_portion * equal_net_payments + (1 - equal_portion) * spitzer_net_payments
 
     bounds = [(0, 1)]
-    result = differential_evolution(target_function, bounds, disp=False, seed=SEED)
+    result = differential_evolution(target_function, bounds, disp=False, maxiter=100, seed=SEED)
     equal_portion = result.x
     if equal_portion == 1:
         _equal_optimal_result = {}
@@ -184,7 +191,7 @@ def optimize(max_first_payment_fraction: float,
              funding_rate: float,
              is_married_couple=False,
              equal_amortization=None,
-             set_prime_portion=None):
+             set_prime_portion=None) -> (dict, float):
     if max_first_payment_fraction > 1 / MIN_DURATION:
         raise ValueError(f'Max first payment fraction must be <= 1 / {MIN_DURATION} '
                          f'>>> max_first_payment_fraction == {max_first_payment_fraction}.')
@@ -236,7 +243,7 @@ if __name__ == '__main__':
     #                                                                                           set_prime_portion=None)
     # pp(optimal_result)
 
-    set_prime_portion = 0.333
+    set_prime_portion = 0.667
     principal = asset_cost - capital
     max_first_payment_fraction = max_monthly_payment / principal
     funding_rate = principal / asset_cost

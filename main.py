@@ -97,8 +97,8 @@ def func(event):
                             amortizations,
                             prime)
 
-    new = window.open()
-    new.document.body.innerHTML = html_out
+    # new = window.open()
+    # new.document.body.innerHTML = html_out
 
 
 
