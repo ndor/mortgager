@@ -211,75 +211,75 @@ def optimize(max_first_payment_fraction: float,
                                                                       set_prime_portion=set_prime_portion)
 
 
-# if __name__ == '__main__':
-#     import matplotlib.pyplot as plt
-#     import pandas as pd
-#     from pprint import PrettyPrinter
-#     pp = PrettyPrinter().pprint
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    from pprint import PrettyPrinter
+    pp = PrettyPrinter().pprint
 
-#     asset_cost = 2150000
-#     capital = 950000
-#     max_monthly_payment = 20000
-#     net_monthly_income = 6000
-#     is_married_couple = False
-#     equal_amortization = True
+    asset_cost = 2150000
+    capital = 950000
+    max_monthly_payment = 20000
+    net_monthly_income = 6000
+    is_married_couple = False
+    equal_amortization = True
 
-#     # funding_rate = 0.75
-#     # principal_portions = {'madad': 0.37, 'prime': 0.33, 'fixed': 0.3}
-#     # d = update_yearly_to_monthly_rates_with_risk(funding_rate, is_married_couple)
+    # funding_rate = 0.75
+    # principal_portions = {'madad': 0.37, 'prime': 0.33, 'fixed': 0.3}
+    # d = update_yearly_to_monthly_rates_with_risk(funding_rate, is_married_couple)
 
-#     # payments_bank = tri_amortization_composition_duration_variable(d, principal_portions, equal_amortization=False)
-#     # pp(payments_bank)
+    # payments_bank = tri_amortization_composition_duration_variable(d, principal_portions, equal_amortization=False)
+    # pp(payments_bank)
 
-#     # optimal_result, net_payments = get_optimized_composition(d, principal_portions, equal_amortization=True)
-#     # pp(optimal_result)
+    # optimal_result, net_payments = get_optimized_composition(d, principal_portions, equal_amortization=True)
+    # pp(optimal_result)
 
-#     # optimal_result, net_payments = get_optimized_principal_portions(d, equal_amortization=True, set_prime_portion=None)
-#     # pp(optimal_result)
+    # optimal_result, net_payments = get_optimized_principal_portions(d, equal_amortization=True, set_prime_portion=None)
+    # pp(optimal_result)
 
-#     # optimal_result, net_payments = get_optimized_principal_portions_with_amortization_defined(d,
-#     #                                                                                           max_first_payment_fraction,
-#     #                                                                                           equal_amortization=None,
-#     #                                                                                           set_prime_portion=None)
-#     # pp(optimal_result)
+    # optimal_result, net_payments = get_optimized_principal_portions_with_amortization_defined(d,
+    #                                                                                           max_first_payment_fraction,
+    #                                                                                           equal_amortization=None,
+    #                                                                                           set_prime_portion=None)
+    # pp(optimal_result)
 
-#     set_prime_portion = 0.667
-#     principal = asset_cost - capital
-#     max_first_payment_fraction = max_monthly_payment / principal
-#     funding_rate = principal / asset_cost
-#     optimal_result, net_payments = optimize(max_first_payment_fraction,
-#                                             funding_rate,
-#                                             is_married_couple=is_married_couple,
-#                                             equal_amortization=equal_amortization,
-#                                             set_prime_portion=set_prime_portion)
-#     pp(optimal_result)
+    set_prime_portion = 0.667
+    principal = asset_cost - capital
+    max_first_payment_fraction = max_monthly_payment / principal
+    funding_rate = principal / asset_cost
+    optimal_result, net_payments = optimize(max_first_payment_fraction,
+                                            funding_rate,
+                                            is_married_couple=is_married_couple,
+                                            equal_amortization=equal_amortization,
+                                            set_prime_portion=set_prime_portion)
+    pp(optimal_result)
 
-#     # multiplying with finance:
-#     optimal_result_finance = {}
-#     for k1, v in optimal_result.items():
-#         k2 = list(v.keys())[0]
-#         optimal_result_finance[k1] = np.ceil(v[k2]['pmt'] * principal).astype('int32')
-#         print(optimal_result_finance[k1].shape)
+    # multiplying with finance:
+    optimal_result_finance = {}
+    for k1, v in optimal_result.items():
+        k2 = list(v.keys())[0]
+        optimal_result_finance[k1] = np.ceil(v[k2]['pmt'] * principal).astype('int32')
+        print(optimal_result_finance[k1].shape)
 
-#     print('-'*44)
-#     pp(optimal_result_finance)
+    print('-'*44)
+    pp(optimal_result_finance)
 
-#     # array_length = []
-#     # for k1, v in optimal_result.items():
-#     #     k2 = list(v.keys())[0]
-#     #     array_length.append(len(v[k2]))
-#     # tot = np.zeros(max(array_length))
-#     # for k1, v in optimal_result.items():
-#     #     k2 = list(v.keys())[0]
-#     #     tot[:len(v[k2])] = tot[:len(v[k2])] + v[k2]
-#     #     v[k2] = np.append(v[k2], [0])
-#     #     plt.plot(v[k2], label=f'{k1.replace("_", " ")}: {k2} months')
-#     # tot = np.append(tot, [0])
-#     # plt.plot(tot, label=f'sum of all amortizations')
-#     # plt.legend()
-#     # plt.xlabel('month')
-#     # plt.ylabel('payment')
-#     # plt.grid(True)
-#     # plt.show()
+    # array_length = []
+    # for k1, v in optimal_result.items():
+    #     k2 = list(v.keys())[0]
+    #     array_length.append(len(v[k2]))
+    # tot = np.zeros(max(array_length))
+    # for k1, v in optimal_result.items():
+    #     k2 = list(v.keys())[0]
+    #     tot[:len(v[k2])] = tot[:len(v[k2])] + v[k2]
+    #     v[k2] = np.append(v[k2], [0])
+    #     plt.plot(v[k2], label=f'{k1.replace("_", " ")}: {k2} months')
+    # tot = np.append(tot, [0])
+    # plt.plot(tot, label=f'sum of all amortizations')
+    # plt.legend()
+    # plt.xlabel('month')
+    # plt.ylabel('payment')
+    # plt.grid(True)
+    # plt.show()
 
 
