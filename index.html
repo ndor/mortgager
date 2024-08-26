@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="https://pyscript.net/releases/2024.4.2/core.css">
+        <script type="module" src="https://pyscript.net/releases/2024.4.2/core.js"></script>
+        <title>try</title>
+    </head>
+    <body>
+        <script>
+            function checkAndSetInBounds() {
+                // alert('pop!')
+                // amortization check:
+                if (!spitzer.checked && !equal.checked) {
+                    spitzer.checked = true;
+                }
+                // marriage check:
+                if (is_single_asset.checked && (capital.value < asset_cost.value * 0.25)) {
+                    capital.value = parseInt(asset_cost.value * 0.25);
+                } else if (!is_single_asset.checked && (capital.value < asset_cost.value * 0.5)) {
+                    capital.value = parseInt(asset_cost.value * 0.5);
+                }
+                // asset cost check:
+                if ((asset_cost.value < 100000) || (asset_cost.value === '')) {
+                    asset_cost.value = 100000;
+                }
+                loan = asset_cost.value - capital.value;
+                min_monthly_payment = parseInt(1.5 * loan / (12 * 30));
+                min_net_monthly_income = parseInt(3 * min_monthly_payment);
+                // capital check:
+                calculate.disabled = loan <= 0;
+                if ((is_single_asset.checked && (capital.value < asset_cost.value * 0.25)) || (capital.value === '')) {
+                    capital.value = parseInt(asset_cost.value * 0.25);
+                } else if ((!is_single_asset.checked && (capital.value < asset_cost.value * 0.5)) || (capital.value === '')) {
+                    capital.value = parseInt(asset_cost.value * 0.5);
+                }
+                // net monthly income check:
+                if ((net_monthly_income.value < min_net_monthly_income) || (net_monthly_income.value === '')) {
+                    net_monthly_income.value = min_net_monthly_income;
+                }
+                // max monthly payment check:
+                if ((max_monthly_payment.value > net_monthly_income.value / 3) || (max_monthly_payment.value === '')) {
+                    max_monthly_payment.value = parseInt(net_monthly_income.value / 3);
+                }
+                if (max_monthly_payment.value < min_monthly_payment) {
+                    max_monthly_payment.value = min_monthly_payment;
+                }
+            }
+        </script>
+        <h2>יועץ משכנתא חינמי</h2>
+        <div>
+            <p>
+                באמצעות כלי זה תוכלו לקבל את התמהיל האידיאלי עבורכם!<br>
+                בתמהיל שיחושב, סך הריבית הוא הנמוך ביותר עבור המשכנתא שלכם.<br>
+            </p>
+            <p>
+                * כדאי להכיר את השיקולים המחושבים במסלול המשכנתא. בכל תחום תוכלו למצוא מידע נוסף להשלמת הידע.
+            </p>
+        </div>
+        <!-- define inputs -->
+        <form>
+            <fieldset>
+                <legend><b>בחר לוח סילוקין</b></legend>
+                <details>
+                    <summary>מידע נוסף</summary>
+                    <iframe src="info/amortization_info.html"></iframe>
+                </details>
+                <div aria-required="true">
+                    <input type="checkbox" id="spitzer" name="amortizations" value="spitzer" checked onchange="checkAndSetInBounds()" />
+                    <label for="spitzer">כלול קרן שפיצר&nbsp;&nbsp;</label>
+                    <input type="checkbox" id="equal" name="amortizations" value="equal" onchange="checkAndSetInBounds()" />
+                    <label for="equal">כלול קרן שווה&nbsp;&nbsp;</label>
+                </div>
+            </fieldset>
+            <br>
+            <fieldset>
+                <legend><b>מרכיב ריבית פריים</b></legend>
+                <details>
+                    <summary>מידע נוסף</summary>
+                    <iframe src="info/prime_info.html"></iframe>
+                </details>
+                <div>
+                    <input type="radio" id="33" name="prime" value="1" checked />
+                    <label for="33">מקסימום ישן - 33%&nbsp;&nbsp;</label>
+                    <input type="radio" id="66" name="prime" value="2" />
+                    <label for="66">מקסימום חדש - 66%&nbsp;&nbsp;</label>
+                    <input type="radio" id="opt" name="prime" value="0" />
+                    <label for="opt">חלוקה מיטבית אוטומטית&nbsp;&nbsp;</label>
+                </div>
+            </fieldset>
+            <br>
+            <fieldset>
+                <legend><b>פרטים אשיים</b></legend>
+                <details>
+                    <summary>מידע נוסף</summary>
+                    <iframe src="info/personal_details_info.html"></iframe>
+                </details>
+                <div>
+                    <input type="checkbox" id="is_married_couple" name="is_married_couple" value="1" />
+                    <label for="is_married_couple">זוג נשוי \ מוכר בציבור&nbsp;&nbsp;</label>
+                    <br>
+                    <input type="checkbox" id="is_single_asset" name="is_single_asset" value="1" checked onchange="checkAndSetInBounds()" />
+                    <label for="is_single_asset">זה יהיה הנכס היחיד&nbsp;&nbsp;</label>
+                    <br>
+                </div>
+                <br>
+                <div>
+                    <label for="asset_cost">מחיר הנכס&nbsp;&nbsp;</label>
+                    <input type="number" id="asset_cost" name="asset_cost" value="100000" min="100000" max="10000000" step="1000" onchange="checkAndSetInBounds()" />
+                    <br>
+                    <br>
+                    <label for="capital">הון עצמי&nbsp;&nbsp;</label>
+                    <input type="number" id="capital" name="capital" step="1000" value="25000" min="25000" max="10000000" onchange="checkAndSetInBounds()" />
+                    <br>
+                    <br>
+                    <label for="net_monthly_income">הכנסה חודשית נטו&nbsp;&nbsp;</label>
+                    <input type="number" id="net_monthly_income" name="net_monthly_income" step="100" value="3600" min="3600" max="100000" onchange="checkAndSetInBounds()" />
+                    <br>
+                    <br>
+                    <label for="max_monthly_payment">תשלום חודשי מקסימלי&nbsp;&nbsp;</label>
+                    <input type="number" id="max_monthly_payment" name="max_monthly_payment" step="100" value="1200" min="1200" max="100000" onchange="checkAndSetInBounds()" />
+                    <br>
+                    <br>
+                </div>
+            </fieldset>
+            <br>
+            <input type="reset" value="אתחול נתונים">
+
+        </form>
+        <br>
+        <!-- action -->
+        <button py-click="func" id="calculate" name="calculate">חשב</button>
+<!--        <br>-->
+<!--        <br>-->
+        <!--      <div id="output"></div>-->
+        <script type="py" src="./main.py" config="./pyscript.json"></script>
+    </body>
+</html>
